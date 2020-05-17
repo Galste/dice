@@ -129,7 +129,7 @@ Picks a value from a an array of `items`. Each item's `weight` determines how li
 
 ### `weightedSample<T>(items: Array<{value: T; weight: number | (info: {value: T, count: number; counts: Map<T, number>, pick: number}) => number; unique?: boolean | number | (info: {value: T, count: number; counts: Map<T, number>, pick: number}) => number | boolean}>, count: number | {min: number; max: number}, options?: {normalize?: boolean | ((value: T) => number); default?: T; unique?: boolean | number | (info: {value: T, count: number; counts: Map<T, number>, pick: number}) => number | boolean}): T[]`
 Picks a value from an array of `items`, `count` times. Each item's `weight` determines how likely it would be for its value to be picked, i.e. an item with a weight of 2 is twice as likely to have its value picked than an item with a weight of 1.
-- `items: Array<{value: T; weight: number}` The array to pick values from.
+- `items: Array<{value: T; weight: number | (info: {value: T, count: number; counts: Map<T, number>, pick: number}) => number; unique?: boolean | number | (info: {value: T, count: number; counts: Map<T, number>, pick: number}` The array to pick values from.
   - `value: T` The value to be picked.
   - `weight: number | (info: {value: T, count: number; counts: Map<T, number>, pick: number}) => number` The value's weight. If type is `(info: {value: T, count: number; counts: Map<T, number>, pick: number}) => number`, then weight is calculated individualy before every pick (`count` times).
     - `value: T` The value for which `weight` is being calculated for.
