@@ -1,24 +1,30 @@
 import {range, returnOne} from './util.ts';
 
 type CountsOf<T> = Map<T, number>;
-type DescriptorFn<T, R> = (info: {value: T, count: number; counts: CountsOf<T>, roll: number}) => R;
+type DescriptorFn<T, R> = (info: {value: T, count: number; counts: CountsOf<T>, pick: number}) => R;
 type UniquenessDescriptor<T> = boolean | number | DescriptorFn<T, number | boolean>;
 type Count = number | {
     min: number;
     max: number;
 };
-type Weighted<T> = {
+type Item<T> = {
     value: T;
+};
+type Weighted<T> = Item<T> & {
     weight: number;
 };
-type WeightedDynamic<T> = {
-    value: T;
+type WeightedDynamic<T> = Item<T> & {
     weight: number | DescriptorFn<T, number>;
     unique?: UniquenessDescriptor<T>;
 };
-type WeightedPickOptions<T> = {
+type WeightedPickOptionsBase<T> = {
     normalize?: boolean | ((value: T) => number);
+};
+type WeightedPickOptions<T> = WeightedPickOptionsBase<T> & {
     default?: T;
+};
+type WeightedPickOptionsHasDefault<T> = WeightedPickOptionsBase<T> & {
+    default: T;
 };
 type SampleOptions<T> = {
     unique?: UniquenessDescriptor<T>;
@@ -39,7 +45,7 @@ export class Dice {
     }
 
     public integers(min: number, max: number, count: Count): number[] {
-        const pickedCount = this._getRollCount(count);
+        const pickedCount = this._getPickCount(count);
         const integers: number[] = [];
         for (const _ of range(pickedCount)) {
             integers.push(this.integer(min, max));
@@ -48,7 +54,7 @@ export class Dice {
     }
 
     public reals(min: number, max: number, count: Count): number[] {
-        const pickedCount = this._getRollCount(count);
+        const pickedCount = this._getPickCount(count);
         const reals: number[] = [];
         for (const _ of range(pickedCount)) {
             reals.push(this.real(min, max));
@@ -56,6 +62,8 @@ export class Dice {
         return reals;
     }
 
+    public weightedPick<T>(items: Array<Weighted<T>>, options: WeightedPickOptionsHasDefault<T>): T;
+    public weightedPick<T>(items: Array<Weighted<T>>, options?: WeightedPickOptions<T>): T | undefined;
     public weightedPick<T>(items: Array<Weighted<T>>, options?: WeightedPickOptions<T>): T | undefined {
         const weightSum = items.reduce((sum, item) => sum + item.weight, 0);
         if (weightSum === 0) {
@@ -81,14 +89,14 @@ export class Dice {
     }
 
     public weightedSample<T>(items: Array<WeightedDynamic<T>>, count: Count, options?: WeightedSampleOptions<T>): T[] {
-        const pickedCount = this._getRollCount(count);
+        const pickedCount = this._getPickCount(count);
         const picks: T[] = [];
         const currentItems = new Map<T, WeightedDynamic<T>>();
         const counts: CountsOf<T> = new Map<T, number>();
-        const getMaxUnique = ({value, unique, roll}: {
+        const getMaxUnique = ({value, unique, pick}: {
             value: T,
             unique?: UniquenessDescriptor<T>,
-            roll: number,
+            pick: number,
         }): number => {
             if (unique === true) {
                 return 1;
@@ -101,7 +109,7 @@ export class Dice {
                     value,
                     count: counts.get(value) ?? 0,
                     counts,
-                    roll,
+                    pick,
                 });
                 if (result === true) {
                     return 1;
@@ -116,7 +124,7 @@ export class Dice {
             currentItems.set(item.value, item);
             counts.set(item.value, 0);
         }
-        for (const roll of range(pickedCount)) {
+        for (const pick of range(pickedCount)) {
             const weightedStatic: Array<Weighted<T>> = [];
             for (const item of currentItems.values()) {
                 weightedStatic.push({
@@ -127,24 +135,24 @@ export class Dice {
                             value: item.value,
                             count: counts.get(item.value) ?? 0,
                             counts,
-                            roll,
+                            pick,
                         }),
                 })
             }
-            const pick = this.weightedPick(weightedStatic, options);
-            if (pick === undefined) {
+            const picked = this.weightedPick(weightedStatic, options);
+            if (picked === undefined) {
                 return picks;
             }
-            const item = currentItems.get(pick);
+            const item = currentItems.get(picked);
             if (item === undefined) {
                 return picks;
             }
-            picks.push(pick);
-            const previousPickCount = counts.get(pick) ?? 0;
+            picks.push(picked);
+            const previousPickCount = counts.get(picked) ?? 0;
             const newPickCount = previousPickCount + 1;
-            counts.set(pick, newPickCount);
-            if (newPickCount >= getMaxUnique({value: pick, unique: item.unique ?? options?.unique, roll})) {
-                currentItems.delete(pick);
+            counts.set(picked, newPickCount);
+            if (newPickCount >= getMaxUnique({value: picked, unique: item.unique ?? options?.unique, pick})) {
+                currentItems.delete(picked);
             }
         }
         return picks;
@@ -152,18 +160,18 @@ export class Dice {
 
     public sample<T>(values: T[], count: Count = 1, options?: SampleOptions<T>): T[] {
         return this.weightedSample(
-            values.map((item) => ({value: item, weight: 1})),
+            values.map((value) => ({value, weight: 1})),
             count,
             {unique: true, ...options}
         );
     }
 
-    public shuffle<T>(items: T[]): T[] {
-        return this.sample<T>(items, items.length, {unique: true});
+    public shuffle<T>(values: T[]): T[] {
+        return this.sample<T>(values, values.length, {unique: true});
     }
 
-    public pick<T>(items: T[]): T | undefined {
-        const [picked] = this.sample(items);
+    public pick<T>(values: T[]): T | undefined {
+        const [picked] = this.sample(values);
         return picked;
     }
 
@@ -180,7 +188,7 @@ export class Dice {
     }
 
     public rolls(d: number | number[], count: Count): RollsResult {
-        const pickedCount = this._getRollCount(count);
+        const pickedCount = this._getPickCount(count);
         const result: RollsResult = {rolls: [], sum: 0};
         for (const _ of range(pickedCount)) {
             const roll = this.roll(d);
@@ -190,7 +198,7 @@ export class Dice {
         return result;
     }
 
-    private _getRollCount(count: Count): number {
+    private _getPickCount(count: Count): number {
         return typeof count === 'number'
             ? count
             : this.integer(count.min, count.max);

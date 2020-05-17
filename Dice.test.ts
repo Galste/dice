@@ -2,7 +2,7 @@ import {assertEquals, assertStrictEq} from "https://deno.land/std/testing/assert
 import {Dice} from "./Dice.ts";
 
 type Foo = {foo: number};
-type IndividualFnArgs = {value: Foo, count: number; counts: Map<Foo, number>, roll: number};
+type IndividualFnArgs = {value: Foo, count: number; counts: Map<Foo, number>, pick: number};
 
 const low = new Dice(() => 0);
 const mid = new Dice(() => 0.5);
@@ -246,12 +246,12 @@ Deno.test('Dice#weightedSample Unique number less than 1 same as 1', () => {
 });
 
 Deno.test('Dice#weightedSample Unique function args, unique function returns true', () => {
-    let rollCount = 0;
+    let pickCount = 0;
     assertEquals(
-        mid.weightedSample(weightedRefsEvenDist, 3, {unique: ({value, count, counts, roll}) => {
+        mid.weightedSample(weightedRefsEvenDist, 3, {unique: ({value, count, counts, pick}) => {
             const unique = value.foo % 2 === 0;
             assertEquals(count, counts.get(value));
-            assertEquals(roll, ++rollCount);
+            assertEquals(pick, ++pickCount);
             return unique;
         }}),
         [
@@ -335,13 +335,13 @@ Deno.test('Dice#weightedSample Individual unique number', () => {
 });
 
 Deno.test('Dice#weightedSample Individual unique function args, returns true', () => {
-    let rollCount = 0;
+    let pickCount = 0;
     const weightedRefsEvenDistWithUnique = weightedRefsEvenDist.map((item) => ({
         ...item,
-        unique: ({value, count, counts, roll}: IndividualFnArgs) => {
+        unique: ({value, count, counts, pick}: IndividualFnArgs) => {
             const unique = value.foo % 2 === 0;
             assertEquals(count, counts.get(value));
-            assertEquals(roll, ++rollCount);
+            assertEquals(pick, ++pickCount);
             return unique;
         },
     }));
@@ -410,13 +410,13 @@ Deno.test('Dice#weightedSample Individual unique function returns number less th
 });
 
 Deno.test('Dice#weightedSample Individual weight function', () => {
-    let rollCount = 0;
+    let pickCount = 0;
     const weightedRefsUnevenDist = weightedRefsEvenDist.map((item) => ({
         ...item,
-        weight: ({value, count, counts, roll}: IndividualFnArgs) => {
+        weight: ({value, count, counts, pick}: IndividualFnArgs) => {
             const weight = count > 0 ? 0 : 1 - value.foo % 2;
             assertEquals(count, counts.get(value));
-            assertEquals(roll, Math.ceil(++rollCount / weightedRefsUnevenDist.length));
+            assertEquals(pick, Math.ceil(++pickCount / weightedRefsUnevenDist.length));
             return weight;
         },
     }));
