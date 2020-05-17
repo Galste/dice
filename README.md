@@ -42,8 +42,8 @@ dice.reals(0.5, 5.5, 3);
 ## API Reference
 ---
 ### `constructor(randomFn: typeof Math.random)`
-Use `new Dice(randomFn)` to get a `Dice` instance that uses `randomFn` for generating random number.
-That function must return a `number` in the range [0, 1). The `default` export of this module is `new Dice(Math.random)`.
+Use `new Dice(randomFn)` to get a `Dice` instance that uses `randomFn` for generating random numbers.
+That function must return a float `number` in the range `[0, 1)`. The `default` export of this module is `new Dice(Math.random)`.
 
 ### `integer(min: number, max: number): number`
 Picks an integer between `min` inclusive and `max` inclusive.
