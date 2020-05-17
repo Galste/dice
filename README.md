@@ -60,8 +60,8 @@ Picks an integer between `min` inclusive and `max` inclusive, `count` times.
 
 ### `real(min: number, max: number): number`
 Picks a float between `min` inclusive and `max` exclusive.
-- `min` Minimum value.
-- `min` Maximum value.
+- `min: number` Minimum value.
+- `min: number` Maximum value.
 - returns `number` The picked float.
 
 ### `reals(min: number, max: number, count: number | {min: number; max: number}): number[]`
