@@ -4,7 +4,7 @@ Game-oriented random sampling library for Deno.
 ## Usage
 Quick API usage summary, see API reference below for more details.
 ```typescript
-import dice from 'https://raw.githubusercontent.com/Galste/dice/v1.0.0/Dice.ts';
+import dice from 'https://raw.githubusercontent.com/Galste/dice/v1.0.2/Dice.ts';
 
 // Roll one d6.
 dice.roll();
@@ -167,5 +167,5 @@ Picks a value from an array of `items`, `count` times. Each item's `weight` dete
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE) file for details
 
